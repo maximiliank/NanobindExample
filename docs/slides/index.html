@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+
+  <title>Cpp User Group Vienna Talk</title>
+
+  <link rel="stylesheet" href="node_modules/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="node_modules/reveal.js/dist/theme/league.css" id="theme">
+
+  <link rel="stylesheet" href="node_modules/reveal.js/plugin/highlight/monokai.css">
+
+  <script type="text/javascript" id="MathJax-script" async src="node_modules/mathjax/es5/tex-chtml.js">
+  </script>
+  <style type="text/css">
+    .reveal p {
+      text-align: left;
+    }
+
+    .reveal .title p {
+      text-align: center;
+    }
+
+    .reveal p img {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .reveal ul {
+      display: block;
+    }
+
+    .reveal ol {
+      display: block;
+    }
+
+    @media print {
+      .slide-background {
+        background: #1c1e20;
+        background: -moz-radial-gradient(center, circle cover, #555a5f 0%, #1c1e20 100%);
+        background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, #555a5f), color-stop(100%, #1c1e20));
+        background: -webkit-radial-gradient(center, circle cover, #555a5f 0%, #1c1e20 100%);
+        background: -o-radial-gradient(center, circle cover, #555a5f 0%, #1c1e20 100%);
+        background: -ms-radial-gradient(center, circle cover, #555a5f 0%, #1c1e20 100%);
+        background: radial-gradient(center, circle cover, #555a5f 0%, #1c1e20 100%);
+        background-color: var(--r-background-color);
+      }
+    }
+
+    .navigate-up .controls-arrow,
+    .navigate-left .controls-arrow,
+    .navigate-right .controls-arrow,
+    .navigate-down .controls-arrow {
+      color: darkgray;
+    }
+
+    /* unvisited link */
+    a:link {
+      color: darkgray;
+    }
+
+    /* visited link */
+    a:visited {
+      color: darkgray;
+    }
+
+    /* mouse over link */
+    .reveal a:hover {
+      color: gray;
+    }
+
+    /* selected link */
+    a:active {
+      color: darkgray;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="reveal">
+
+    <div class="slides">
+
+      <section data-markdown data-separator="===" class="title">
+        ## Bridging C++ and Python with Nanobind
+
+        #### Talk Cpp Usergroup Vienna
+        Maximilian Kleinert
+
+        3.6.2025
+      </section>
+      <!-- Use external markdown resource, separate slides by three newlines; vertical slides by two newlines -->
+      <!--<section data-markdown="markdown.md" data-separator="^\n\n\n" data-separator-vertical="^\n\n"></section>-->
+
+      <section data-markdown data-separator="===" data-separator-vertical="^---$">
+        <script type="text/template">
+## Motivation
+
+- **Performance**: C++ offers high performance for compute-intensive tasks
+- **Productivity**: Offer a Python interface for C++ libraries to leverage Python's ease of use
+- **Reuse**: Leverage existing C++ libraries in Python projects without rewriting code
+- **Prototyping**: Rapidly prototype in Python, optimize bottlenecks in C++
+
+===
+
+## Historic Overview
+
+- **Boost.Python** (2002, Dave Abrahams)
+  - Early, powerful, but heavy-weight and complex
+  - Part of the Boost C++ Libraries
+  - Required linking against Boost and Python
+
+---
+
+- **pybind11** (2016, Wenzel Jakob)
+  - Inspired by Boost.Python, but header-only and lightweight
+  - Modern C++11/14 support
+  - Widely adopted in open source and industry
+
+---
+
+- **nanobind** (2022, Wenzel Jakob)
+  - Successor to pybind11, designed for Python 3.8+
+  - Smaller, faster, and more memory efficient
+  - Focuses on minimalism and performance
+
+===
+
+## Simple nanobind Binding Example
+
+```cpp
+// example.cpp
+#include <nanobind/nanobind.h>
+namespace nb = nanobind;
+
+int add(int a, int b) {
+    return a + b;
+}
+
+NB_MODULE(my_ext, m) {
+    m.def("add", &add, "Add two numbers");
+}
+```
+
+### Using from Python
+
+```python
+import my_ext
+print(my_ext.add(2, 3))  # Output: 5
+```
+
+===
+## Exchanging Information: Arguments and Return Values
+
+- nanobind automatically converts between C++ and Python types for:
+  - Fundamental types: `int`, `float`, `bool`, etc.
+  - STL types: `std::string`, `std::vector`, `std::map`, etc. <br> <small>*(requires extra nanobind headers)*</small>
+- Custom classes when you create bindings
+
+
+---
+
+### Example: Passing and Returning Strings
+
+```cpp
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/string.h>
+namespace nb = nanobind;
+
+std::string greet(const std::string &name) {
+    return "Hello, " + name + "!";
+}
+
+NB_MODULE(my_ext, m) {
+    m.def("greet", &greet, "Greet someone by name");
+}
+```
+
+```python
+import my_ext
+print(my_ext.greet("World"))  # Output: Hello, World!
+```
+
+---
+
+### Example: Working with Lists
+
+```cpp
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/vector.h>  // Required for std::vector support
+#include <vector>
+namespace nb = nanobind;
+
+int sum_vector(const std::vector<int> &v) {
+    int sum = 0;
+    for (int x : v) sum += x;
+    return sum;
+}
+
+NB_MODULE(my_ext, m) {
+    m.def("sum_vector", &sum_vector, "Sum a list of integers");
+}
+```
+
+```python
+import my_ext
+print(my_ext.sum_vector([1, 2, 3]))  # Output: 6
+```
+
+---
+
+### Downsides: Working with Lists and Copies
+
+- When passing a Python `list` to a C++ function expecting a `std::vector`, **nanobind creates a copy** of the data
+- This can be inefficient for large arrays or performance-critical code
+- The copy happens both when passing data from Python to C++ and when returning a `std::vector` to Python
+
+===
+
+### Better Options: Eigen and NumPy Arrays
+
+- For numerical data and large arrays, prefer using **Eigen** or **NumPy** arrays
+- nanobind provides **type casters** for Eigen and NumPy, enabling **zero-copy** data exchange
+- This allows C++ functions to operate directly on Python memory buffers, avoiding unnecessary copies
+
+---
+
+### Example: Using NumPy Arrays (Zero-Copy)
+
+```cpp
+#include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
+namespace nb = nanobind;
+
+float sum_array(nb::ndarray<nb::numpy, float, nb::c_contig> arr) {
+    float sum = 0;
+    for (ssize_t i = 0; i < arr.shape(0); ++i)
+        sum += arr(i);
+    return sum;
+}
+
+NB_MODULE(my_ext, m) {
+    m.def("sum_array", &sum_array, "Sum a NumPy array (no copy)");
+}
+```
+
+```python
+import my_ext
+import numpy as np
+a = np.array([1, 2, 3], dtype=np.float32)
+print(my_ext.sum_array(a))  # Output: 6.0
+```
+
+---
+
+### What are Type Casters?
+
+- **Type casters** are nanobind mechanisms that convert between Python and C++ types
+- Built-in type casters handle fundamental types, STL containers, Eigen, and NumPy arrays
+- You can write your own type casters for custom types to control how data is exchanged between Python and C++
+
+---
+
+### Example: Writing a Custom Type Caster I
+
+- Custom type casters let you control how a C++ type is converted to/from Python
+- Useful for integrating third-party or legacy types
+
+```cpp
+#include <nanobind/nanobind.h>
+namespace nb = nanobind;
+
+// A simple C++ struct not directly supported by nanobind
+struct MyStruct {
+    int value;
+};
+```
+
+---
+
+### Example: Writing a Custom Type Caster II
+
+<div style="font-size: 0.7em">
+
+```cpp
+// Custom type caster for MyStruct
+namespace nanobind {
+template <> struct type_caster<MyStruct> {
+    NB_TYPE_CASTER(MyStruct, const_name("MyStruct"));
+
+    // Python -> C++
+    bool from_python(handle src, uint8_t) {
+        if (!nb::isinstance<nb::int_>(src))
+            return false;
+        value.value = nb::cast<int>(src);
+        return true;
+    }
+
+    // C++ -> Python
+    static handle from_cpp(MyStruct src, rv_policy, handle) {
+        return nb::int_(src.value).release();
+    }
+};
+}
+```
+
+</div>
+
+===
+
+## Other possibilities to exchange data
+
+Nanobind offers [Bindings](https://nanobind.readthedocs.io/en/latest/exchanging.html#option-2-bindings)
+
+```cpp
+#include <nanobind/stl/bind_vector.h>
+
+using IntVector = std::vector<int>;
+IntVector double_it(const IntVector &in) { /* .. omitted .. */ }
+
+namespace nb = nanobind;
+NB_MODULE(my_ext, m) {
+    nb::bind_vector<IntVector>(m, "IntVector");
+    m.def("double_it", &double_it);
+}
+```
+
+```python
+>>> import my_ext
+>>> my_ext.double_it([1, 2, 3])
+my_ext.IntVector([2, 4, 6])
+```
+
+---
+
+### Example: Binding a Simple Class
+
+<div style="font-size: 0.8em">
+
+  ```cpp
+#include <nanobind/nanobind.h>
+namespace nb = nanobind;
+
+class Point {
+public:
+    Point(float x, float y) : x(x), y(y) {}
+    float norm() const { return std::sqrt(x*x + y*y); }
+    float x, y;
+};
+
+NB_MODULE(my_ext, m) {
+    nb::class_<Point>(m, "Point")
+        .def(nb::init<float, float>())
+        .def("norm", &Point::norm)
+        .def_rw("x", &Point::x)
+        .def_rw("y", &Point::y);
+}
+```
+
+```python
+import my_ext
+p = my_ext.Point(3, 4)
+print(p.norm())  # Output: 5.0
+print(p.x, p.y)  # Output: 3.0 4.0
+```
+
+</div>
+
+---
+
+### `class_` Bindings Overview
+
+
+<table style="width: 90%; font-size: 18px;">
+        <thead>
+            <tr>
+                <th>Feature</th>
+                <th>nanobind Method(s)</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Constructor</td>
+                <td><code>.def(nb::init<...>())</code></td>
+                <td>Bind C++ constructors</td>
+            </tr>
+            <tr>
+                <td>Method</td>
+                <td><code>.def("name", &Class::method)</code></td>
+                <td>Bind instance methods</td>
+            </tr>
+            <tr>
+                <td>Field (ro/rw)</td>
+                <td>
+                    <code>.def_ro("field", &Class::field)</code><br>
+                    <code>.def_rw("field", &Class::field)</code>
+                </td>
+                <td>Bind read-only/read-write fields</td>
+            </tr>
+            <tr>
+                <td>Property (ro/rw)</td>
+                <td>
+                    <code>.def_prop_ro("prop", &Class::getter)</code><br>
+                    <code>.def_prop_rw("prop", &Class::getter, &Class::setter)</code>
+                </td>
+                <td>Bind properties</td>
+            </tr>
+            <tr>
+                <td>Static Method</td>
+                <td><code>.def_static("name", &Class::method)</code></td>
+                <td>Bind static methods</td>
+            </tr>
+            <tr>
+                <td>Static Field</td>
+                <td>
+                    <code>.def_ro_static("field", &Class::field)</code><br>
+                    <code>.def_rw_static("field", &Class::field)</code>
+                </td>
+                <td>Bind static fields</td>
+            </tr>
+            <tr>
+                <td>Static Property</td>
+                <td>
+                    <code>.def_prop_ro_static("prop", &Class::getter)</code><br>
+                    <code>.def_prop_rw_static("prop", &Class::getter, &Class::setter)</code>
+                </td>
+                <td>Bind static properties</td>
+            </tr>
+        </tbody>
+    </table>
+
+===
+
+## Apache Arrow
+
+- **pyarrow** implements the <a href="https://arrow.apache.org/docs/format/Columnar.html">Apache Arrow columnar memory format</a>: Array, ChunkedArray, Table, RecordBatch, etc.
+- pyarrow is the **default backend** for Polars, an option in Pandas, and will be required in Pandas 3.0
+
+- type casters for Arrow types are available as <a href="https://github.com/maximiliank/nanobind_pyarrow">nanobind extension library</a> 
+
+---
+
+## Example: Using Arrow Arrays
+
+<div style="font-size: 0.74em">
+
+```cpp
+#include <memory>
+#include <nanobind/nanobind.h>
+#include <nanobind_pyarrow/pyarrow_import.h>
+#include <nanobind_pyarrow/array_primitive.h>
+#include <arrow/compute/api.h>  // Include Arrow compute functions
+
+namespace nb = nanobind;
+
+NB_MODULE(test_pyarrow_ext, m) {
+    static nb::detail::pyarrow::ImportPyarrow module;
+    m.def("my_pyarrow_function", [](std::shared_ptr<arrow::DoubleArray> arr) {
+        auto result = arrow::compute::CallFunction("multiply", {arr, arr});
+        if (!result.ok()) throw std::runtime_error(result.status().ToString());
+        return std::static_pointer_cast<arrow::DoubleArray>(result.ValueOrDie().make_array());
+    });
+}
+```
+
+</div>
+
+===
+
+## Building nanobind Extensions
+
+- **CMake** is the recommended build system for nanobind extensions
+- **sckit-build-core** is a build backend for Python that uses CMake to build extension modules
+
+
+
+===
+
+## Distributing Extensions: Wheel Building
+
+- **Wheels** (`.whl` files) are the standard for distributing Python binary packages
+- Wheels allow users to install pre-built native extensions without a compiler
+- **Problem:** Compiling a shared object (`.so`) file on one Linux distribution/version may **not** work on another due to differences in the system C library (**glibc**) and other dependencies.
+
+---
+
+## ManyLinux
+
+- For Linux, the **manylinux** standard ensures compatibility across most distributions by building against an old, widely-supported glibc version inside a special Docker image
+- manylinux_x_y tagged wheels shall work on any linux distribution based on glibc version x.y or newer
+
+---
+
+### What about other dependencies?
+
+- Many Python extensions depend on shared libraries (e.g., Arrow, OpenBLAS, custom C++ libs)
+- These dependencies may not be present on the target system, or may have incompatible versions
+- **Bundling** these libraries inside your wheel ensures your extension works everywhere [[auditwheel](https://github.com/pypa/auditwheel)]
+
+---
+
+### Building Wheels
+
+- Tools like [cibuildwheel](https://github.com/pypa/cibuildwheel) automate building wheels for all platforms (Linux, macOS, Windows)
+
+```bash
+# Example: Build a manylinux wheel using cibuildwheel
+pip install cibuildwheel
+pytohn -m cibuildwheel 
+```
+
+- Configuration can be done via a `pyproject.toml` file
+- The resulting `.whl` files can be uploaded to PyPI for easy installation via `pip`
+
+===
+
+## Links
+
+The [documentation](https://nanobind.readthedocs.io/en/latest/index.html) of nanobind is available at 
+
+An example project is available on [GitHub](https://github.com/maximiliank/NanobindExample.git) which demonstrates:
+
+   - How to use nanobind with CMake and scikit-build-core
+   - How to use nanobind with Apache Arrow
+   - How to integrate `spdlog` for logging
+   - How to create wheels using `cibuildwheel`
+
+          </script>
+        </script>
+      </section>
+    </div>
+  </div>
+
+  <script src="node_modules/reveal.js/dist/reveal.js"></script>
+  <script src="node_modules/reveal.js/plugin/markdown/markdown.js"></script>
+  <script src="node_modules/reveal.js/plugin/highlight/highlight.js"></script>
+  <script src="node_modules/reveal.js/plugin/notes/notes.js"></script>
+
+  <script>
+
+    Reveal.initialize({
+      controls: true,
+      progress: true,
+      history: true,
+      center: true,
+
+      plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+      slideNumber: false,
+      showSlideNumber: 'print'
+    });
+    Reveal.configure({ pdfSeparateFragments: false });
+
+  </script>
+
+</body>
+
+</html>

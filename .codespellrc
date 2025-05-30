@@ -1,0 +1,7 @@
+[codespell]
+builtin = clear,rare,en-GB_to_en-US,names,informal,code
+check-filenames =
+check-hidden =
+ignore-words-list = stdio,ro,hist,compiletime
+skip = */.git,*/out,*/.vscode,*/conan2,*/.venv,*/htmlcov
+quiet-level = 2

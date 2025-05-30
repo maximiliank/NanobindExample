@@ -1,0 +1,50 @@
+# Build directories and binary files
+build/
+out/
+conan2/
+
+# User specific settings
+CMakeUserPresets.json
+
+# IDE files
+.vs/
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*~
+_ReSharper*
+*.log
+
+# OS Generated Files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.Trash-*
+$RECYCLE.BIN/
+.TemporaryItems
+ehthumbs.db
+Thumbs.db
+
+.env
+.venv/
+
+# local scripts etc. used for development
+python/__pycache__
+
+# version file
+python/src/NanobindExample/_version.py
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+python/src/NanobindExample/py.typed
+python/src/NanobindExample/python_ext.pyi

@@ -1,0 +1,214 @@
+[build-system]
+requires = [
+    "scikit-build-core >=0.4.3",
+    "nanobind >=2.0.0",
+    "setuptools_scm[toml]>=6.2",
+    "cmake >= 3.30.0",
+    "ninja >= 1.11.0",
+    "conan >= 2.0.5",
+    "pyarrow~=20.0.0",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "NanobindExample"
+dynamic = ["version"]
+authors = [
+    { name = "Maximilian Kleinert", email = "kleinert.max@gmail.com" },
+]
+description = "An example python package using nanobind to wrap C++ code."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["pyarrow~=20.0.0", "polars"]
+
+[project.urls]
+Homepage = "https://github.com/maximiliank/nanobind-example"
+
+[tool.setuptools_scm]
+write_to = "python/src/NanobindExample/_version.py"
+version_scheme = "no-guess-dev"
+
+
+[project.optional-dependencies]
+dev = ['codespell', 'toml', 'ruff', 'pre-commit', 'pyright']
+test = ["pytest", "pytest-cov"]
+
+[tool.pytest.ini_options]
+filterwarnings = ["error::FutureWarning"]
+testpaths = ["python/tests"]
+# Make sure you add "--no-cov" to "python.testing.pytestArgs" in .vscode/settings.json such that debugging tests work
+addopts = "--cov --cov-report html --cov-report term-missing --cov-fail-under 0"
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)7s] %(message)s" # (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+
+[tool.coverage.run]
+source = ["NanobindExample"]
+omit = ["*/NanobindExample/_version.py"]
+
+[tool.scikit-build]
+wheel.packages = ["python/src/NanobindExample"]
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+sdist.include = ["python/src/NanobindExample/_version.py"]
+sdist.exclude = ["/.github", "/.vscode", "/docs", "/python/tests", "/test"]
+# Protect the configuration against future changes in scikit-build-core
+minimum-version = "0.4"
+
+# Setuptools-style build caching in a local directory
+build-dir = "out/build/{wheel_tag}"
+
+wheel.license-files = []
+
+# Build stable ABI wheels for CPython 3.12+
+wheel.py-api = "cp312"
+
+# This activates verbose builds
+cmake.verbose = true
+logging.level = "INFO"
+
+[tool.scikit-build.cmake.define]
+ENABLE_TESTING = "OFF"
+
+[tool.cibuildwheel]
+# Necessary to see build output from the actual compilation
+build-verbosity = 1
+
+# Run pytest to ensure that the package was correctly built
+test-command = "pytest {project}/python/tests --override-ini addopts=''"
+test-requires = "pytest"
+
+# Use release package preset
+config-settings = { 'cmake.args' = '--preset=unixlike-gcc-release-package' }
+
+#before-all = "make -C third_party_lib"
+container-engine = { name = "podman", create-args = ["--network", "host", "--pull", "always"] }
+
+build = ["cp312-*"]
+
+manylinux-x86_64-image = "quay.io/pypa/manylinux_2_28_x86_64"
+
+# Disable building PyPy wheels on all platforms
+skip = ["pp*", "*-musllinux_*"]
+
+# Install system library
+[tool.cibuildwheel.linux]
+archs = ["x86_64"]
+before-all = []
+
+[tool.cibuildwheel.linux.environment]
+CONAN_HOME = "/opt/conan2"
+
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "cpp",
+    "out",
+    "*.pyi",
+    "python/src/NanobindExample/_version.py",
+]
+
+# Same as Black.
+line-length = 100
+indent-width = 4
+
+# Assume Python 3.12
+target-version = "py312"
+
+
+[tool.ruff.lint]
+# See rules https://docs.astral.sh/ruff/rules/
+select = [
+    "ARG", # flake8-unused-arguments https://docs.astral.sh/ruff/rules/#flake8-unused-arguments-arg
+    "ANN", # flake8-annotations https://docs.astral.sh/ruff/rules/#flake8-annotations-ann
+    "N", # pep8-naming https://docs.astral.sh/ruff/rules/#pep8-naming-n
+    # "D",  # pydocstyle https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "E",   # pycodestyle errors https://docs.astral.sh/ruff/rules/#error-e
+    "W",   # pycodestyle warnings https://docs.astral.sh/ruff/rules/#warning-w
+    "F",   # pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "I",   # isort https://docs.astral.sh/ruff/rules/#isort-i
+    "B",   # flake8-bugbear https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "C4",  # flake8-comprehensions https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+    "UP",  # pyupgrade https://docs.astral.sh/ruff/rules/#pyupgrade-up
+    "PL",  # Pylint https://docs.astral.sh/ruff/rules/#pylint-pl
+    "SLF", # flake8-self https://docs.astral.sh/ruff/rules/#flake8-self-slf
+    "NPY", # NumPy-specific rules https://docs.astral.sh/ruff/rules/#numpy-specific-rules-npy
+    "BLE", # flake8-blind-except https://docs.astral.sh/ruff/rules/#flake8-blind-except-ble
+    "COM", # flake8-commas https://docs.astral.sh/ruff/rules/#flake8-commas-com
+    "EM",  # flake8-errmsg https://docs.astral.sh/ruff/rules/#flake8-errmsg-em
+]
+ignore = ["N999", "COM812"]
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/*" = ["D", "PLR2004", "ANN201"]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+[tool.pyright]
+include = ["python/src"]
+exclude = [
+    "**/.venv",
+    "**/.vscode",
+    "**/.git",
+    "~/.vscode-server",
+    "**/node_modules",
+    "**/__pycache__",
+    "dev",
+    "out",
+    "configured_files",
+]
+defineConstant = { DEBUG = true }
+
+reportMissingImports = "error"
+reportMissingTypeStubs = false
+
+pythonVersion = "3.12"
+pythonPlatform = "Linux"
+
+venvPath = "."
+venv = ".venv"

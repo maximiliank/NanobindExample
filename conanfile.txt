@@ -1,0 +1,9 @@
+[requires]
+spdlog/1.15.1
+gtest/1.16.0
+
+[layout]
+cmake_layout
+
+[generators]
+CMakeDeps

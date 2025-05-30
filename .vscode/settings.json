@@ -1,0 +1,49 @@
+{
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "output.smartScroll.enabled": false,
+  "editor.formatOnSave": true,
+  "cmake.configureOnOpen": true,
+  "cmake.copyCompileCommands": "${workspaceFolder}/out/compile_commands.json",
+  "clangd.arguments": [ "--compile-commands-dir=${workspaceFolder}/out", "--enable-config" ],
+  "ruff.nativeServer": "on",
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.testing.pytestArgs": [ "--show-capture=no", "--no-cov" ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "json.format.keepLines": true,
+  "editor.rulers": [ 120 ],
+  "cmake.statusbar.advanced": {
+    "ctest": {
+      "visibility": "hidden"
+    }
+  },
+  "testMate.cpp.debug.configTemplate": {
+    "type": "lldb",
+    "program": "${exec}",
+    "args": "${argsArray}",
+    "cwd": "${cwd}",
+    "env": "${envObj}",
+    "sourceFileMap": "${sourceFileMapObj}",
+    "externalConsole": false
+  },
+  "terminal.integrated.enablePersistentSessions": false,
+  "testMate.cpp.log.logpanel": false,
+  "testMate.cpp.test.advancedExecutables": [
+    {
+      "pattern": "out/build/${command:cmake.activeConfigurePresetName}/test/*/*tests"
+    }
+  ],
+  "git.autorefresh": true,
+  "git.allowNoVerifyCommit": false,
+  "git.autoRepositoryDetection": false,
+  "cmake.cmakePath": "${workspaceFolder}/.venv/bin/cmake"
+}

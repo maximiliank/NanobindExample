@@ -1,0 +1,34 @@
+{
+    "version": "0.2",
+    "language": "en",
+    "ignorePaths": [
+        ".git/objects",
+        ".vscode",
+        "/usr/include",
+        ".codespellrc",
+        "cspell.json",
+        "out"
+    ],
+    "words": [
+        "unixlike",
+        "ctest",
+        "codespell",
+        "spdlog",
+        "NOLINTNEXTLINE",
+        "NOLINT",
+        "STREQUAL",
+        "nanobind",
+        "Wpedantic",
+        "SABI",
+        "asan",
+        "tsan",
+        "MSVC",
+        "ASAN",
+        "CPACK",
+        "gtest",
+        "endfunction",
+        "INLINES",
+        "gmock",
+        "compiletime",
+    ]
+}

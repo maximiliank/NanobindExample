@@ -1,0 +1,11 @@
+cmake
+conan
+pre-commit
+ninja
+pip-system-certs; platform_system == "Windows"
+nanobind
+scikit-build-core
+setuptools_scm
+ruff
+codespell
+pyarrow~=20.0.0

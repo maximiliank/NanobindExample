@@ -1,0 +1,214 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Setup Pre-Commit",
+      "hide": false,
+      "command": "${command:python.interpreterPath}",
+      "args": [ "-m", "pre_commit", "install" ],
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+    },
+    {
+      "label": "Update Pre-Commit",
+      "hide": false,
+      "command": "${command:python.interpreterPath}",
+      "args": [ "-m", "pre_commit", "autoupdate" ],
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+    },
+    {
+      "label": "Run Pre-Commit",
+      "hide": false,
+      "command": "${command:python.interpreterPath}",
+      "args": [ "-m", "pre_commit", "run", "--all-files" ],
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+    },
+    {
+      "label": "pip list",
+      "hide": false,
+      "command": "${command:python.interpreterPath}",
+      "args": [ "-m", "pip", "list" ],
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+    },
+    {
+      "label": "pip upgrade",
+      "hide": false,
+      "command": "${command:python.interpreterPath}",
+      "args": [ "-m", "pip", "install", "--upgrade", "pip" ],
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+    },
+    {
+      "label": "Install requirements",
+      "hide": false,
+      "command": "${command:python.interpreterPath}",
+      "args": [ "-m", "pip", "install", "-r", "requirements.txt" ],
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "dependsOn": [ "pip upgrade" ]
+    },
+    {
+      "label": "Create Python virtual environment",
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "command": "${command:python.interpreterPath}",
+      "windows": {
+        "command": "python.exe"
+      },
+      "args": [ "-m", "venv", ".venv" ],
+      "problemMatcher": [ ]
+    },
+    {
+      "label": "Editable Install [dev]",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m pip install --no-build-isolation --config-settings='build-dir=${command:cmake.buildDirectory}' --config-settings='cmake.args=--preset=${command:cmake.activeConfigurePresetName}' --config-settings='cmake.build-type=${command:cmake.buildType}' -ve .[dev,test]",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      }
+    },
+    {
+      "label": "Prune and delete local branches",
+      "type": "process",
+      "group": {
+        "kind": "none",
+        "isDefault": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "command": "",
+      "problemMatcher": [ ],
+      "windows": {
+        "command": "powershell.exe",
+        "args": [
+          "-NoProfile",
+          "-Command",
+          "git fetch --prune; git branch -vv | ForEach-Object { if ($_ -match ':\\s+gone\\]') { ($_ -split '\\s+')[1] } } | ForEach-Object { git branch -d $_ }"
+        ]
+      },
+      "linux": {
+        "command": "sh",
+        "args": [
+          "-c",
+          "git fetch --prune && git branch -vv | grep ': gone]' | awk '{print $1}' | xargs -r git branch -d"
+        ]
+      }
+    },
+    {
+      "label": "Ruff lint",
+      "hide": false,
+      "command": "${command:python.interpreterPath}",
+      "args": [ "-m", "ruff", "check", "${input:ruffLintFixOrCheck}" ],
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+    },
+    {
+      "label": "Ruff format",
+      "hide": false,
+      "command": "${command:python.interpreterPath}",
+      "args": [ "-m", "ruff", "format", "${input:ruffFormatFixOrCheck}" ],
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+    },
+    {
+      "label": "Type checking",
+      "hide": false,
+      "command": "${command:python.interpreterPath}",
+      "args": [ "-m", "pyright", "--project", "." ],
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+    },
+    {
+      "label": "Fix clang-tidy",
+      "type": "shell",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "command": "run-clang-tidy",
+      "args": [ "-fix", "-checks='-*,readability-braces-around-statements'", "-header-filter=src", "-p=out" ],
+    }
+  ],
+  "inputs": [
+    {
+      "id": "ruffFormatFixOrCheck",
+      "type": "pickString",
+      "description": "Choose action for Ruff format",
+      "options": [
+        {
+          "label": "Check",
+          "value": "--check"
+        },
+        {
+          "label": "Fix",
+          "value": ""
+        }
+      ],
+      "default": "--check"
+    },
+    {
+      "id": "ruffLintFixOrCheck",
+      "type": "pickString",
+      "description": "Choose action for Ruff check",
+      "options": [
+        {
+          "label": "Just check",
+          "value": ""
+        },
+        {
+          "label": "Fix",
+          "value": "--fix"
+        }
+      ],
+      "default": ""
+    }
+  ]
+}
