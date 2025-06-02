@@ -1,6 +1,11 @@
 import pyarrow as pa
 import pytest
-from NanobindExample import echo, my_function, square_array, table_function
+from NanobindExample import echo, my_function, square_array, sum, table_function
+
+
+def test_sum() -> None:
+    result = sum([1.0, 2.0])
+    assert result == 3.0
 
 
 def test_my_function() -> None:
@@ -25,3 +30,7 @@ def test_table() -> None:
 def test_echo(caplog: pytest.LogCaptureFixture) -> None:
     echo()
     assert "Test message from bindings" in caplog.text
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])
