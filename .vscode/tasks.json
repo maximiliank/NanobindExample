@@ -175,7 +175,14 @@
       },
       "command": "run-clang-tidy",
       "args": [ "-fix", "-checks='-*,readability-braces-around-statements'", "-header-filter=src", "-p=out" ],
-    }
+    },
+    {
+      "label": "Hide gh-pages branch",
+      "type": "shell",
+      "command": "if ! git config --get-all remote.origin.fetch | grep -q '^refs/heads/gh-pages'; then git config --add remote.origin.fetch '^refs/heads/gh-pages'; fi && if git branch -r | grep -q 'origin/gh-pages'; then git branch -rd origin/gh-pages; fi",
+      "problemMatcher": [ ],
+      "hide": false
+    },
   ],
   "inputs": [
     {

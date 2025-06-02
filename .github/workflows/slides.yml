@@ -32,6 +32,63 @@ jobs:
             my-devcontainer \
             /working_dir/docs/slides/index.html /slides/NanobindExample.pdf
 
+      - name: Create HTML page for PDF download and view
+        run: |
+          cat > ./slides/index.html <<EOF
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <title>NanobindExample Slides</title>
+            <style>
+              body { font-family: sans-serif; margin: 2em; }
+              .download-btn {
+                display: inline-block;
+                padding: 0.5em 1em;
+                background: #0078d4;
+                color: #fff;
+                text-decoration: none;
+                border-radius: 4px;
+                margin-bottom: 1em;
+              }
+              iframe { width: 100%; height: 80vh; border: 1px solid #ccc; }
+              .no-pdf { color: #b00; margin-top: 1em; }
+            </style>
+          </head>
+          <body>
+            <h1>NanobindExample Slides</h1>
+            <a class="download-btn" href="NanobindExample.pdf" download>Download PDF</a>
+            <div id="pdf-container">
+              <iframe id="pdf-frame" src="NanobindExample.pdf"></iframe>
+              <div id="no-pdf-message" class="no-pdf" style="display:none;">
+                Your browser does not support inline PDF viewing. Please use the download button above.
+              </div>
+            </div>
+            <script>
+              // Check if the PDF loaded successfully
+              document.getElementById('pdf-frame').addEventListener('error', function() {
+                document.getElementById('pdf-frame').style.display = 'none';
+                document.getElementById('no-pdf-message').style.display = 'block';
+              });
+
+              // Additional check for PDF support
+              function supportsPDFs() {
+                var ua = window.navigator.userAgent;
+                // Basic check for iOS devices (which don't support inline PDFs in most browsers)
+                if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return false;
+                // Try to embed a PDF
+                var pdfMime = !!navigator.mimeTypes && !!navigator.mimeTypes['application/pdf'];
+                return pdfMime;
+              }
+              if (!supportsPDFs()) {
+                document.getElementById('pdf-frame').style.display = 'none';
+                document.getElementById('no-pdf-message').style.display = 'block';
+              }
+            </script>
+          </body>
+          </html>
+
+
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:
