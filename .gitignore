@@ -50,3 +50,4 @@ python/src/NanobindExample/py.typed
 python/src/NanobindExample/python_ext.pyi
 
 .coverage
+.devcontainer
