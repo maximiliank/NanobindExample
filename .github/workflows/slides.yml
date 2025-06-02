@@ -1,0 +1,40 @@
+name: Slides
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/slides.yml'
+      - 'docs/slides/index.html'
+
+jobs:
+
+  build-slides:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create slides directory
+        run: mkdir -p ./slides
+        
+      - name: Build devcontainer image
+        run: |
+          docker build -t my-devcontainer -f docs/slides/Dockerfile .
+
+      - name: Build Slides inside devcontainer
+        run: |
+          sed -i 's|"node_modules/|"/opt/npm_packages/node_modules/|g' docs/slides/index.html
+          docker run --rm \
+            -v ${{ github.workspace }}:/working_dir \
+            -v ${{ github.workspace }}/slides:/slides \
+            my-devcontainer \
+            /working_dir/docs/slides/index.html /slides/NanobindExample.pdf
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./slides
+          keep_files: true
