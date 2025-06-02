@@ -87,7 +87,7 @@ jobs:
             </script>
           </body>
           </html>
-          EOF            
+EOF
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
