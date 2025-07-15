@@ -84,9 +84,16 @@ install(
   if("${_u_length}" GREATER 0)
     message(WARNING "Unresolved dependencies detected!")
   endif()
-]])
+]]
+  COMPONENT python_ext)
 
-install(TARGETS ${TARGET_NAME} LIBRARY DESTINATION NanobindExample)
+install(TARGETS ${TARGET_NAME} LIBRARY DESTINATION NanobindExample COMPONENT python_ext)
+
+if(DEFINED LIBASAN_LOCATION)
+  # Until version > 2.0.7 of nanobind is released we manually have to add sanitizes if they are enabled
+  message(STATUS "Manually adding sanitizers to target ${TARGET_NAME} until new release of nanobind")
+  target_link_options(${TARGET_NAME} INTERFACE -fsanitize="address,undefined")
+endif()
 
 nanobind_add_stub(
   ${TARGET_NAME}_stub
@@ -101,6 +108,13 @@ nanobind_add_stub(
   MARKER_FILE
   "${CMAKE_CURRENT_SOURCE_DIR}/src/NanobindExample/py.typed")
 
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/NanobindExample/${TARGET_NAME}.pyi"
-        DESTINATION "NanobindExample/$<TARGET_PROPERTY:${TARGET_NAME},OUTPUT_NAME>.pyi")
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/NanobindExample/py.typed" DESTINATION NanobindExample)
+add_custom_target(python_ext_with_stubs DEPENDS ${TARGET_NAME} ${TARGET_NAME}_stub)
+
+install(
+  FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/NanobindExample/${TARGET_NAME}.pyi"
+  DESTINATION NanobindExample
+  COMPONENT python_ext)
+install(
+  FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/NanobindExample/py.typed"
+  DESTINATION NanobindExample
+  COMPONENT python_ext)

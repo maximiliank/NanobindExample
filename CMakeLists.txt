@@ -159,3 +159,10 @@ set(CPACK_PACKAGE_FILE_NAME
 )
 
 include(CPack)
+
+# Create convenience targets for installing individual components
+add_custom_target(
+  install-python-ext
+  COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR} --component python_ext
+  COMMENT "Installing Python extension"
+  DEPENDS python_ext_with_stubs)
