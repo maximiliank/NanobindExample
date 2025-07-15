@@ -16,7 +16,7 @@ def test_my_function() -> None:
 def test_double_array() -> None:
     arr = pa.array([1.0, 2.0, 3.0, 4.0])
     squared = square_array(arr)
-    assert squared.to_pylist() == [1.0, 4.0, 9.0, 16.0]
+    assert squared.to_pylist() == [1.0, 4.0, 9.0, 16.0]  # type: ignore
 
 
 def test_table() -> None:
